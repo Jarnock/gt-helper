@@ -33,11 +33,13 @@ const generateCodeBase = async (option?: string) => {
       copy_folder = "gth_prisma";
       break;
     case "prisma-demo":
-      copy_folder = "gth_prisma";
+      copy_folder = "gth_prisma-demo";
       break;
     case "rest":
       copy_folder = "gth_rest";
       break;
+    case "beta":
+      copy_folder = "gth_beta";
     default:
       break;
   }
