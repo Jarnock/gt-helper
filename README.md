@@ -4,8 +4,8 @@ GT Helper is a tool to help developers create new Gather.Town Extensions.
 
 ## Usage
 
-`npx gt-helper`
-`npx gt-helper [codebase]`
+`npx gt-helper@latest`
+`npx gt-helper@latest [codebase]`
 
 ## License
 
@@ -28,7 +28,7 @@ Currently, GT Helper includes the following codebases:
 - `prisma-demo` (not recommended): This project is a template for a Gather.Town Extension, and includes a demo of all the features of GT Helper using Prisma. This is intended for demonstration and learning purposes only.
 
 To implement, enter the following command (using the codebase you want, e.g. `prisma`)):
-`npx gt-helper prisma`
+`npx gt-helper@latest prisma`
 
 ## Credits
 
