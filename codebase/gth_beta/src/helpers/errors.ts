@@ -30,6 +30,15 @@ const cli = {
   BgGray: "\x1b[100m",
 };
 
+/**
+ * This function is used to make the generic errors more readable
+ *
+ * @param game The game object
+ * @returns void
+ * @example makeBetterErrors(game)
+ *
+ */
+
 export const makeBetterErrors = (game: Game) => {
   game.subscribeToEvent("error", ({ error }, context) => {
     cli_output("error", `${context.spaceId}: ${error.message}`, error.code);
@@ -42,10 +51,31 @@ export const makeBetterErrors = (game: Game) => {
   game.subscribeToEvent("info", ({ info }, context) => {
     cli_output("info", `${context.spaceId}: ${info.message}`);
   });
+
+  game.subscribeToEvent(
+    "spaceRegistersCommand",
+    ({ spaceRegistersCommand }, context) => {
+      cli_output(
+        "info",
+        `${context.spaceId}: Registered ${spaceRegistersCommand.command} as command.`
+      );
+    }
+  );
 };
 
+/**
+ * This function is used to make the generic errors more readable
+ *
+ * @param type The type of output (error, warn, info, debug, good, bad, test)
+ * @param message The message to output
+ * @param code The error code (optional)
+ * @returns void
+ * @example cli_output("error", "This is an error", 404)
+ *
+ */
+
 export const cli_output = (
-  type: "error" | "warn" | "info" | "debug",
+  type: "error" | "warn" | "info" | "debug" | "good" | "bad" | "test",
   message: string,
   code?: number
 ) => {
@@ -74,6 +104,27 @@ export const cli_output = (
     case "debug":
       console.log(
         `${cli.FgGray}[${type}]${cli.Reset}${
+          code ? ` [${code}] ` : " "
+        }${message}`
+      );
+      break;
+    case "good":
+      console.log(
+        `${cli.BgGreen}[${type}]${cli.Reset}${
+          code ? ` [${code}] ` : " "
+        }${message}`
+      );
+      break;
+    case "bad":
+      console.log(
+        `${cli.BgRed}[${type}]${cli.Reset}${
+          code ? ` [${code}] ` : " "
+        }${message}`
+      );
+      break;
+    case "test":
+      console.log(
+        `${cli.BgMagenta}[${type}]${cli.Reset}${
           code ? ` [${code}] ` : " "
         }${message}`
       );

@@ -5,13 +5,20 @@
 
 import { Game } from "@gathertown/gather-game-client";
 import { commandList } from "../config/commands";
-
+import { spaceRoles } from "./other";
 /*
     //Space Member Permssions, to create Moderator or Owner limited actions.
     Note: spaceId here is the randomly generated characters before the space name, ie spaceId\\spaceName, not both parts
     [spaceId:string]:{playerId:{currentlyEquippedWearables:{...},name:string,roles:{DEFAULT_BUILDER:boolean,OWNER:boolean,DEFAULT_MOD:boolean}}}
 */
-import { spaceRoles } from "./other";
+
+/**
+ * This function subscribes to events from the game client
+ * @param game Game client
+ * @returns void
+ * @example subscribeToEvents(game)
+ * @todo Implement system where functions self-declare their subscriptions to be bundled later
+ */
 
 export const subscribeToEvents = (game: Game): void => {
   /*
@@ -53,21 +60,23 @@ export const subscribeToEvents = (game: Game): void => {
     */
 };
 
-/**
- * Function checks permissions of given user
- * @param game
- * @param playerId
- * @param roles
- * @param operand //Operation to perform on role array. Defaults to AND
- * @returns
- */
-
 enum Role {
   OWNER,
   DEFAULT_MOD,
   DEFAULT_BUILDER,
   MEMBER,
 }
+
+/**
+ * Function checks permissions of given user
+ * @param game Game client
+ * @param playerId Player ID
+ * @param roles Array of roles to check
+ * @param operand Operation to perform on role array. Defaults to AND
+ * @returns boolean
+ * @example checkUserPermissions(game, playerId, [Role.OWNER, Role.DEFAULT_MOD], "OR")
+ * @todo Fix this to work with new roles system
+ */
 
 const checkUserPermissions = (
   game: Game,
@@ -78,7 +87,9 @@ const checkUserPermissions = (
   //OWNER, DEFAULT_MOD, DEFAULT_BUILDER
   let check: boolean[] = [];
   for (let role of roles) {
-    check.push(spaceRoles[game.spaceId!.split("\\")[0]][playerId!].roles[role]);
+    check.push(
+      spaceRoles[game.spaceId!.split("\\")[0]][playerId!].roles[role] ?? false
+    );
   }
 
   switch (operand) {
