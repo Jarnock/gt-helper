@@ -15,6 +15,7 @@ GT Helper is a tool to help developers create new Gather.Town Extensions.
 ## Contributing
 
 [GitHub](https://github.com/Jarnock/gt-helper) for this project.
+[NPM](https://www.npmjs.com/package/gt-helper) for this package. 
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
