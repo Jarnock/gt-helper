@@ -4,6 +4,7 @@ global.WebSocket = require("isomorphic-ws");
 import { SPACE_URLS } from "./config/config";
 import { post_connect_actions, pre_connect_actions } from "./functions/other";
 import { subscribeToEvents } from "./functions/subscriptions";
+import { cli_output } from "./helpers/errors";
 require("dotenv").config();
 const API_KEY = process.env.API_KEY;
 
@@ -11,12 +12,19 @@ interface GameArray {
   [key: string]: Game;
 }
 
-const run = async (): Promise<void> => {
-  const games = await connectToSpaces();
-
-  for (let id in games) {
-    subscribeToEvents(games[id]);
+export const runtime_errors = () => {
+  let errors = false;
+  if (!API_KEY) {
+    errors = true;
+    cli_output("error", "No API key found in .env file");
   }
+
+  if (SPACE_URLS.length === 0) {
+    errors = true;
+    cli_output("error", "No spaces found in config file");
+  }
+
+  return errors;
 };
 
 export const connectToSpaces = (): Promise<GameArray> => {
@@ -51,6 +59,14 @@ export const connectToSpaces = (): Promise<GameArray> => {
 
     resolve(games);
   });
+};
+
+const run = async (): Promise<void> => {
+  const games = await connectToSpaces();
+
+  for (let id in games) {
+    subscribeToEvents(games[id]);
+  }
 };
 
 run();
