@@ -319,7 +319,7 @@ class GTObject {
       width: 0,
       height: 0,
       normal: "",
-    },
+    } as Type0_Object,
     public game?: Game,
     public map?: string
   ) {

@@ -75,7 +75,7 @@ export const makeBetterErrors = (game: Game) => {
  */
 
 export const cli_output = (
-  type: "error" | "warn" | "info" | "debug" | "good" | "bad" | "test",
+  type: "error" | "warn" | "info" | "debug" | "good" | "bad" | "test" | "data",
   message: string,
   code?: number
 ) => {
@@ -125,6 +125,13 @@ export const cli_output = (
     case "test":
       console.log(
         `${cli.BgMagenta}[${type}]${cli.Reset}${
+          code ? ` [${code}] ` : " "
+        }${message}`
+      );
+      break;
+    case "data":
+      console.log(
+        `${cli.BgBlue}[${type}]${cli.Reset}${
           code ? ` [${code}] ` : " "
         }${message}`
       );

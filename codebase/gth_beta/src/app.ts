@@ -62,6 +62,10 @@ export const connectToSpaces = (): Promise<GameArray> => {
 };
 
 const run = async (): Promise<void> => {
+  if (runtime_errors()) {
+    return;
+  }
+
   const games = await connectToSpaces();
 
   for (let id in games) {
