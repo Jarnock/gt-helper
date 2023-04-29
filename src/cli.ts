@@ -7,6 +7,16 @@ import fse from "fs-extra";
 import path from "path";
 import { Command } from "commander";
 import { fileURLToPath } from "url";
+import figlet from "figlet";
+import inquirer from "inquirer";
+import isValidFilename from "valid-filename";
+
+type BuildOptions = {
+  name: string;
+  database: boolean;
+  experimental: boolean;
+  orm: "none" | "prisma" | "drizzle";
+};
 
 const GT_HELPER = "gt-helper";
 
@@ -16,37 +26,20 @@ const main = async () => {
   runCli();
 };
 
-const generateCodeBase = async (option?: string) => {
-  const parent_dir = process.cwd();
+const getCodebasePath = () => {
   const __dirname = path.join(fileURLToPath(import.meta.url), "..", "..");
+  return path.join(__dirname, "codebase");
+};
 
-  let copy_folder = "gth_default";
+const makeProjectDir = async (name: string) => {
+  const parent_dir = process.cwd();
+  await fse.mkdir(path.join(parent_dir, name));
+  process.chdir(path.join(parent_dir, name));
+  return path.join(parent_dir, name);
+};
 
-  switch (option) {
-    case "default":
-      copy_folder = "gth_default";
-      break;
-    case "demo":
-      copy_folder = "gth_demo";
-      break;
-    case "prisma":
-      copy_folder = "gth_prisma";
-      break;
-    case "prisma-demo":
-      copy_folder = "gth_prisma-demo";
-      break;
-    case "rest":
-      copy_folder = "gth_rest";
-      break;
-    case "beta":
-      copy_folder = "gth_beta";
-    default:
-      break;
-  }
-
-  let newpath = path.join(__dirname, "codebase", copy_folder);
-
-  await fse.copy(newpath, parent_dir);
+const renameDotFiles = async () => {
+  const parent_dir = process.cwd();
   await fse.rename(
     path.join(parent_dir, "_gitignore"),
     path.join(parent_dir, ".gitignore")
@@ -55,28 +48,162 @@ const generateCodeBase = async (option?: string) => {
     path.join(parent_dir, "_env"),
     path.join(parent_dir, ".env")
   );
+  return;
+};
+
+const generateCodeBase = async (options: BuildOptions) => {
+  const codebase_path = getCodebasePath();
+  const parent_dir = process.cwd();
+
+  const default_code_files = path.join(codebase_path, "default");
+
+  await fse.copy(default_code_files, parent_dir);
+
+  if (options.database) {
+    const database_code_files = path.join(codebase_path, "no-orm");
+    await fse.copy(database_code_files, parent_dir, { overwrite: true });
+
+    if (options.orm === "prisma") {
+      const prisma_code_files = path.join(codebase_path, "prisma");
+      await fse.copy(prisma_code_files, parent_dir, { overwrite: true });
+    } else if (options.orm === "drizzle") {
+      const drizzle_code_files = path.join(codebase_path, "drizzle");
+      await fse.copy(drizzle_code_files, parent_dir, { overwrite: true });
+    }
+  }
+
+  if (options.experimental) {
+    const experimental_code_files = path.join(codebase_path, "experimental");
+    await fse.copy(experimental_code_files, parent_dir, { overwrite: true });
+  }
+
+  //read package.json in current directory
+  const packageData = fse.readJSONSync(path.join(parent_dir, "package.json"));
+
+  //update package.json with project name
+  packageData.name = options.name;
+
+  //if experimental features are enabled, add experimental scripts
+  if (options.experimental) {
+    packageData.scripts = {
+      ...packageData.scripts,
+      backup:
+        "npx ts-node -r tsconfig-paths/register src/experimental/backup.ts",
+    };
+  }
+
+  //write package.json back to current directory
+  fse.writeJSONSync(path.join(parent_dir, "package.json"), packageData);
+
+  await renameDotFiles();
 
   return;
 };
 
 const runCli = async () => {
-  const program = new Command().name(GT_HELPER);
+  console.log(figlet.textSync("GT-Helper"));
+
+  const buildOptions: BuildOptions = {
+    name: "my-gt-extension",
+    database: false,
+    experimental: false,
+    orm: "none",
+  };
+
+  const program = new Command();
 
   program
+    .name(GT_HELPER)
     .description("A CLI for creating Gather.Town boilerplate.")
-    .argument("[option]", "The version of GT-Helper Boilerplate to install.")
+    .option("--name <name>", "Specify project name", "my-gt-extension")
+    .option("--orm <orm>", "Specify ORM to use", "none | prisma | drizzle")
+    .option("--experimental", "Enable experimental features")
     .parse(process.argv);
 
-  let cliProvidedOption = program.args[0];
-  if (!cliProvidedOption) {
-    cliProvidedOption = "default";
+  const options = program.opts();
+
+  if (options.name) {
+    buildOptions.name = options.name;
+  }
+
+  if (
+    options.orm === "none" ||
+    options.orm === "prisma" ||
+    options.orm === "drizzle"
+  ) {
+    if (options.orm !== "none") {
+      buildOptions.database = true;
+    }
+    buildOptions.orm = options.orm;
+  }
+
+  if (options.experimental) {
+    buildOptions.experimental = true;
+  }
+
+  const initalPrompt = [];
+
+  if (!options.name) {
+    initalPrompt.push({
+      type: "input",
+      name: "name",
+      message: "What is the name of your project?",
+      default: buildOptions.name,
+    });
+  }
+
+  if (!options.experimental) {
+    initalPrompt.push({
+      type: "confirm",
+      name: "experimental",
+      message: "Would you like to enable experimental features?",
+      default: buildOptions.experimental,
+    });
+  }
+
+  if (!options.orm) {
+    initalPrompt.push({
+      type: "confirm",
+      name: "database",
+      message: "Would you like to use a database?",
+      default: buildOptions.database,
+    });
+  }
+
+  if (initalPrompt.length !== 0) {
+    console.log("Welcome to GT-Helper!");
+    const answers = await inquirer.prompt(initalPrompt);
+
+    buildOptions.name = answers.name;
+    buildOptions.experimental = answers.experimental;
+    buildOptions.database = answers.database;
+
+    if (answers.database) {
+      const ormAnswers = await inquirer.prompt([
+        {
+          type: "list",
+          name: "orm",
+          message: "Which ORM would you like to use?",
+          choices: ["none", "prisma", "drizzle"],
+          default: buildOptions.orm,
+        },
+      ]);
+
+      buildOptions.orm = ormAnswers.orm;
+    }
+  }
+
+  //Validate buildOptions name is valid for file path
+  if (!isValidFilename(buildOptions.name)) {
+    console.log("Invalid project name. Please try again.");
+    process.exit(1);
   }
 
   const npm_spinner = ora("Initializing Project");
   npm_spinner.color = "red";
   npm_spinner.spinner = "dots9";
 
-  const code_spinner = ora("Generating Codebase");
+  const code_spinner = ora("Installing Codebase");
   code_spinner.color = "green";
   code_spinner.spinner = "dots9";
 
@@ -84,17 +211,34 @@ const runCli = async () => {
   install_spinner.color = "blue";
   install_spinner.spinner = "dots9";
 
+  const prisma_spinner = ora("Installing Prisma");
+  prisma_spinner.color = "magenta";
+  prisma_spinner.spinner = "dots9";
+
   npm_spinner.start();
+  const projectDir = await makeProjectDir(buildOptions.name);
   await execa("npm init -y");
   npm_spinner.succeed("Initialized");
 
   code_spinner.start();
-  await generateCodeBase(cliProvidedOption);
-  code_spinner.succeed("Generated");
+  await generateCodeBase(buildOptions);
+  code_spinner.succeed("Installed Successfully");
 
   install_spinner.start();
   await execa("npm install");
   install_spinner.succeed("Installation Complete");
+
+  if (buildOptions.orm === "prisma") {
+    prisma_spinner.start();
+    await execa("npx prisma generate");
+    prisma_spinner.succeed("Prisma Generated Successfully");
+  }
+
+  console.log("Project created successfully!");
+  console.log("To get started:");
+  console.log(`cd ${buildOptions.name}`);
+
+  return;
 };
 
 main().catch((err) => {
