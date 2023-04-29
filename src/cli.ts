@@ -3,7 +3,7 @@
 import { promisify } from "util";
 import { exec } from "child_process";
 import ora from "ora";
-import fse from "fs-extra";
+import fse, { pathExists } from "fs-extra";
 import path from "path";
 import { Command } from "commander";
 import { fileURLToPath } from "url";
@@ -101,7 +101,14 @@ const generateCodeBase = async (options: BuildOptions) => {
 };
 
 const runCli = async () => {
-  console.log(figlet.textSync("GT-Helper"));
+  //clear terminal
+  console.clear();
+
+  console.log(
+    figlet.textSync("GT - Helper", {
+      font: "Doom",
+    })
+  );
 
   const buildOptions: BuildOptions = {
     name: "my-gt-extension",
@@ -115,12 +122,14 @@ const runCli = async () => {
   program
     .name(GT_HELPER)
     .description("A CLI for creating Gather.Town boilerplate.")
-    .option("--name <name>", "Specify project name", "my-gt-extension")
-    .option("--orm <orm>", "Specify ORM to use", "none | prisma | drizzle")
+    .option("--name <name>", "Specify project name")
+    .option("--orm <orm>", "Specify ORM to use")
     .option("--experimental", "Enable experimental features")
     .parse(process.argv);
 
   const options = program.opts();
+
+  console.log("Options: ", options);
 
   if (options.name) {
     buildOptions.name = options.name;
@@ -143,7 +152,7 @@ const runCli = async () => {
 
   const initalPrompt = [];
 
-  if (!options.name) {
+  if (options.name === undefined) {
     initalPrompt.push({
       type: "input",
       name: "name",
@@ -161,7 +170,7 @@ const runCli = async () => {
     });
   }
 
-  if (!options.orm) {
+  if (options.orm === undefined) {
     initalPrompt.push({
       type: "confirm",
       name: "database",
@@ -199,6 +208,13 @@ const runCli = async () => {
     process.exit(1);
   }
 
+  //Determine if project directory already exists
+  const projectDir = path.join(process.cwd(), buildOptions.name);
+  if (await pathExists(projectDir)) {
+    console.log("Project directory already exists. Please try again.");
+    process.exit(1);
+  }
+
   const npm_spinner = ora("Initializing Project");
   npm_spinner.color = "red";
   npm_spinner.spinner = "dots9";
@@ -216,17 +232,17 @@ const runCli = async () => {
   prisma_spinner.spinner = "dots9";
 
   npm_spinner.start();
-  const projectDir = await makeProjectDir(buildOptions.name);
+  await makeProjectDir(buildOptions.name);
   await execa("npm init -y");
-  npm_spinner.succeed("Initialized");
+  npm_spinner.succeed("Project Initialized");
 
   code_spinner.start();
   await generateCodeBase(buildOptions);
-  code_spinner.succeed("Installed Successfully");
+  code_spinner.succeed("Codebase Installed Successfully");
 
   install_spinner.start();
   await execa("npm install");
-  install_spinner.succeed("Installation Complete");
+  install_spinner.succeed("Module Installation Complete");
 
   if (buildOptions.orm === "prisma") {
     prisma_spinner.start();
@@ -237,6 +253,14 @@ const runCli = async () => {
   console.log("Project created successfully!");
   console.log("To get started:");
   console.log(`cd ${buildOptions.name}`);
+
+  if (buildOptions.database) {
+    console.log(
+      "Add your API Key to the .env file, and your Space URL(s) to the database."
+    );
+  } else {
+    console.log("Add your API Key and Space URL(s) to the .env file.");
+  }
 
   return;
 };

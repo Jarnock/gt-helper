@@ -4,10 +4,12 @@ global.WebSocket = require("isomorphic-ws");
 import { subscribeToEvents } from "~functions/subscriptions";
 import { cli_output, makeBetterErrors } from "~helpers/errors";
 import { connectToGames, createGameArray } from "~helpers/games";
-import { env } from "~helpers/env";
+import { getURLs } from "~helpers/prisma";
 
 const run = async (): Promise<void> => {
-  const games = await createGameArray(env.SPACE_URLS.split(","));
+  const spaceUrls = await getURLs();
+
+  const games = await createGameArray(spaceUrls);
 
   cli_output("info", "Games Created");
 

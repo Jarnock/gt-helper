@@ -3,7 +3,7 @@ import { checkAccess } from "~helpers/gt-rest-api";
 import { cli_output } from "~helpers/errors";
 import { subscribeToEvents } from "~functions/subscriptions";
 import { handleCommands } from "~helpers/commands";
-import { env } from "env";
+import { env } from "~helpers/env";
 
 export type GameArray = {
   games: { [space_id: string]: Game };

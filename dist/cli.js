@@ -2,7 +2,7 @@
 import { promisify } from "util";
 import { exec } from "child_process";
 import ora from "ora";
-import fse from "fs-extra";
+import fse, { pathExists } from "fs-extra";
 import path from "path";
 import { Command } from "commander";
 import { fileURLToPath } from "url";
@@ -68,9 +68,13 @@ const generateCodeBase = async (options) => {
     return;
 };
 const runCli = async () => {
-    figlet.textSync("GT-Helper");
+    //clear terminal
+    console.clear();
+    console.log(figlet.textSync("GT - Helper", {
+        font: "Doom",
+    }));
     const buildOptions = {
-        name: "my-project",
+        name: "my-gt-extension",
         database: false,
         experimental: false,
         orm: "none",
@@ -79,11 +83,12 @@ const runCli = async () => {
     program
         .name(GT_HELPER)
         .description("A CLI for creating Gather.Town boilerplate.")
-        .option("--name <name>", "Specify project name", "my-project")
-        .option("--orm <orm>", "Specify ORM to use", "none | prisma | drizzle")
+        .option("--name <name>", "Specify project name")
+        .option("--orm <orm>", "Specify ORM to use")
         .option("--experimental", "Enable experimental features")
         .parse(process.argv);
     const options = program.opts();
+    console.log("Options: ", options);
     if (options.name) {
         buildOptions.name = options.name;
     }
@@ -98,45 +103,59 @@ const runCli = async () => {
     if (options.experimental) {
         buildOptions.experimental = true;
     }
-    const initalPrompt = [
-        {
+    const initalPrompt = [];
+    if (options.name === undefined) {
+        initalPrompt.push({
             type: "input",
             name: "name",
             message: "What is the name of your project?",
             default: buildOptions.name,
-        },
-        {
+        });
+    }
+    if (!options.experimental) {
+        initalPrompt.push({
             type: "confirm",
             name: "experimental",
             message: "Would you like to enable experimental features?",
             default: buildOptions.experimental,
-        },
-        {
+        });
+    }
+    if (options.orm === undefined) {
+        initalPrompt.push({
             type: "confirm",
             name: "database",
             message: "Would you like to use a database?",
             default: buildOptions.database,
-        },
-    ];
-    const answers = await inquirer.prompt(initalPrompt);
-    buildOptions.name = answers.name;
-    buildOptions.experimental = answers.experimental;
-    buildOptions.database = answers.database;
-    if (answers.database) {
-        const ormAnswers = await inquirer.prompt([
-            {
-                type: "list",
-                name: "orm",
-                message: "Which ORM would you like to use?",
-                choices: ["none", "prisma", "drizzle"],
-                default: buildOptions.orm,
-            },
-        ]);
-        buildOptions.orm = ormAnswers.orm;
+        });
+    }
+    if (initalPrompt.length !== 0) {
+        console.log("Welcome to GT-Helper!");
+        const answers = await inquirer.prompt(initalPrompt);
+        buildOptions.name = answers.name;
+        buildOptions.experimental = answers.experimental;
+        buildOptions.database = answers.database;
+        if (answers.database) {
+            const ormAnswers = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "orm",
+                    message: "Which ORM would you like to use?",
+                    choices: ["none", "prisma", "drizzle"],
+                    default: buildOptions.orm,
+                },
+            ]);
+            buildOptions.orm = ormAnswers.orm;
+        }
     }
     //Validate buildOptions name is valid for file path
     if (!isValidFilename(buildOptions.name)) {
         console.log("Invalid project name. Please try again.");
+        process.exit(1);
+    }
+    //Determine if project directory already exists
+    const projectDir = path.join(process.cwd(), buildOptions.name);
+    if (await pathExists(projectDir)) {
+        console.log("Project directory already exists. Please try again.");
         process.exit(1);
     }
     const npm_spinner = ora("Initializing Project");
@@ -152,15 +171,15 @@ const runCli = async () => {
     prisma_spinner.color = "magenta";
     prisma_spinner.spinner = "dots9";
     npm_spinner.start();
-    const projectDir = await makeProjectDir(buildOptions.name);
+    await makeProjectDir(buildOptions.name);
     await execa("npm init -y");
-    npm_spinner.succeed("Initialized");
+    npm_spinner.succeed("Project Initialized");
     code_spinner.start();
     await generateCodeBase(buildOptions);
-    code_spinner.succeed("Installed Successfully");
+    code_spinner.succeed("Codebase Installed Successfully");
     install_spinner.start();
     await execa("npm install");
-    install_spinner.succeed("Installation Complete");
+    install_spinner.succeed("Module Installation Complete");
     if (buildOptions.orm === "prisma") {
         prisma_spinner.start();
         await execa("npx prisma generate");
@@ -169,6 +188,12 @@ const runCli = async () => {
     console.log("Project created successfully!");
     console.log("To get started:");
     console.log(`cd ${buildOptions.name}`);
+    if (buildOptions.database) {
+        console.log("Add your API Key to the .env file, and your Space URL(s) to the database.");
+    }
+    else {
+        console.log("Add your API Key and Space URL(s) to the .env file.");
+    }
     return;
 };
 main().catch((err) => {
