@@ -1,0 +1,7 @@
+# Your Gather.town API Key here
+
+API_KEY = 
+
+
+# Prisma Database Path (boilerplat provided in src/db/dev.db)
+DATABASE_URL="file:../src/db/dev.db"

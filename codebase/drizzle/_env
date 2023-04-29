@@ -1,0 +1,7 @@
+# Your Gather.town API Key here
+
+API_KEY =
+
+# Drizzle Database Path here (boilerplate provided)
+
+DATABASE_PATH = "./src/db/dev.db"

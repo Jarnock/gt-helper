@@ -1,6 +1,6 @@
 {
   "name": "gt-helper",
-  "version": "1.7.9",
+  "version": "1.7.9-beta.3",
   "description": "",
   "main": "bin/cli.js",
   "scripts": {
@@ -16,12 +16,17 @@
   },
   "dependencies": {
     "commander": "^9.4.0",
+    "figlet": "^1.6.0",
     "fs": "^0.0.1-security",
     "fs-extra": "^10.1.0",
-    "ora": "^3.2.0"
+    "inquirer": "^9.2.0",
+    "ora": "^3.2.0",
+    "valid-filename": "^4.0.0"
   },
   "devDependencies": {
+    "@types/figlet": "^1.5.6",
     "@types/fs-extra": "^9.0.13",
+    "@types/inquirer": "^9.0.3",
     "@types/node": "^17.0.24",
     "@types/ora": "^3.2.0"
   }
