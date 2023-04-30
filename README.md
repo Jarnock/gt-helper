@@ -1,5 +1,16 @@
 # gt-helper
 
+```console
+ _____ _____            _   _      _
+|  __ \_   _|          | | | |    | |
+| |  \/ | |    ______  | |_| | ___| |_ __   ___ _ __
+| | __  | |   |______| |  _  |/ _ \ | '_ \ / _ \ '__|
+| |_\ \ | |            | | | |  __/ | |_) |  __/ |
+ \____/ \_/            \_| |_/\___|_| .__/ \___|_|
+                                    | |
+                                    |_|
+```
+
 GT Helper is a tool to help developers create new Gather.Town Extensions.
 
 ## Usage
@@ -98,9 +109,13 @@ The Object Utility Class is a class that extends the Gather.Town Object class. I
 
 ### Basic Usage with Prisma
 
+Start by running the following command in your terminal. Press Y to install the latest version if asked.
+
 ```console
 npx gt-helper@latest
 ```
+
+Answer the questions as follows:
 
 ```console
 What is the name of your project? my-project
@@ -108,6 +123,8 @@ Would you like to enable experimental features? No
 Do you want to use a database? Yes
 What ORM do you want to use? Prisma
 ```
+
+Once the setup is complete, run the following commands in your terminal to add a space URL to your database.
 
 ```console
 cd my-project
