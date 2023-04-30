@@ -6,7 +6,7 @@ GT Helper is a tool to help developers create new Gather.Town Extensions.
 
 `npx gt-helper@latest`
 
-## CLI Interface
+### CLI Interface
 
 The CLI interface will ask you a series of questions to set up your project.
 
@@ -26,7 +26,7 @@ This is the ORM you want to use. The options are `none`, `prisma`, or `drizzle`.
 
 This determines if you want to enable experimental features. Currently, this adds an alpha version of a Gather Space backup feature.
 
-## Additional Arguments
+### Alternate Method: Additional Arguments
 
 If you do not want to use the CLI interface to set up your project, you can use the following arguments to set up your project.
 
@@ -105,6 +105,7 @@ The Object Utility Class is a class that extends the Gather.Town Object class. I
 - [ ] Add automatic backup feature
 - [ ] Add more helper functions
 - [ ] Add more documentation
+- [ ] Add more code examples
 - [ ] Add 'studio mode' for Gather.Town Extension development
 - [ ] Add more utility functions to Object and Player classes
 
