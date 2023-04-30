@@ -42,6 +42,7 @@ If you do not want to use the CLI interface to set up your project, you can use 
 
 - Quick setup for Gather.Town Extensions
 - Support for Prisma and Drizzle ORM
+- Focus on type safety and ease of use
 - Verbose Object and Player classes with type checking, and utility functions for extensions
 - Gather Space backup feature (alpha)
 - Overt Gather.Town Extension lifecycle, for easy debugging and testing
@@ -53,24 +54,24 @@ The Player Utility Class is a class that extends the Gather.Town Player class. I
 
 ### Player Utility Class Functions (Brief Overview)
 
-- Player Outfit Utilities:
-
-  - `parseOutfit`
-  - `updateOutfitString`
-  - `updateOutfitJSON`
-  - `updateOutfit`
-  - `getSpriteUrl`
-
 - Player Status Utilities:
 
-  - `ghost`/`unghost`
-  - `setSpeed`
+  - `ghost`/`unghost`: control player ghost status
+  - `setSpeed`: control player speed
+
+- Player Outfit Utilities:
+
+  - `parseOutfit`: parse outfit string into an object format
+  - `updateOutfitString`: update outfit string
+  - `updateOutfitJSON`: update outfit via JSON object
+  - `updateOutfit`: update outfit via object
+  - `getSpriteUrl`: get sprite url for player
 
 - Player Inventory Utilities:
-  - `inventory`
-  - `getInventoryItem`
-  - `giveItem`
-  - `removeItem`
+  - `inventory`: get player inventory
+  - `getInventoryItem`: get item from player inventory
+  - `giveItem`: give item to player
+  - `removeItem`: remove item from player
 
 ## Object Utility Class
 
@@ -80,16 +81,32 @@ The Object Utility Class is a class that extends the Gather.Town Object class. I
 
 - `GTObjectFactory`
 
-  - `create`: Typesafe Object creation
-  - `createFromMapObject`
-  - `create_type_[x]`: Typesafe Object creation by object type
-  - `create_[usecase]_object`: Typesafe Object creation by usecase
+  - Factory style object creation
+  - `create`: Object creation
+  - `createFromMapObject`: Object creation from Map Object
+  - `create_type_[x]`: Object creation by object type
+  - `create_[usecase]_object`: Object creation by usecase
 
 - `GTObject`
+
   - Accessors and Mutators for all Object properties
   - `update`: Update object in game
   - `toString`/`toJSON`: Object export for easy debugging
   - `moveTo`/`moveBy`: Easy object movement
+
+## Roadmap
+
+- [x] Add CLI interface
+- [x] Add Prisma ORM support
+- [x] Add Object Utility Class
+- [x] Add Player Utility Class
+- [x] Add Drizzle ORM support
+- [x] Add Gather Space backup feature
+- [ ] Add automatic backup feature
+- [ ] Add more helper functions
+- [ ] Add more documentation
+- [ ] Add 'studio mode' for Gather.Town Extension development
+- [ ] Add more utility functions to Object and Player classes
 
 ## License
 
