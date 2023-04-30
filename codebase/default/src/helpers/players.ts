@@ -256,20 +256,6 @@ interface Outfit_String_Parts {
 }
 
 export const makeAvatarURL = (outfitString: string) => {
-  const sprite_parts = [
-    "skin",
-    "bottom",
-    "shoes",
-    "top",
-    "jacket",
-    "glasses",
-    "facial_hair",
-    "hair",
-    "hat",
-    "other",
-    "mobility",
-  ];
-
   let spriteUrl = "";
 
   if (outfitString) {
@@ -280,7 +266,7 @@ export const makeAvatarURL = (outfitString: string) => {
 
     if (spriteJSON["costume"] === null) {
       //loop through sprite parts and add to urlParts front and back
-      for (let part of sprite_parts) {
+      for (let part of Outfit_Parts_Array) {
         if (!spriteJSON[part]?.parts) continue;
         for (let sprite of spriteJSON[part].parts) {
           if (!sprite?.layerId) continue;

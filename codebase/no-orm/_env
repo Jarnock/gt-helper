@@ -3,7 +3,7 @@ API_KEY =
 
 
 # Your Database Path Here (default sqlite database is pregenerated)
-DATABASE_URL = "./src/db/dev.db"
+DATABASE_URL = "./db/dev.db"
 
 
 # Your Space URL. If you are connecting to multiple spaces, separate them with a comma or use a database.

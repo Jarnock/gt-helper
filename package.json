@@ -1,6 +1,6 @@
 {
   "name": "gt-helper",
-  "version": "1.7.9-beta.8",
+  "version": "2.0",
   "description": "",
   "main": "bin/cli.js",
   "scripts": {

@@ -22,10 +22,6 @@ const GT_HELPER = "gt-helper";
 
 const execa = promisify(exec);
 
-const main = async () => {
-  runCli();
-};
-
 const getCodebasePath = () => {
   const __dirname = path.join(fileURLToPath(import.meta.url), "..", "..");
   return path.join(__dirname, "codebase");
@@ -100,7 +96,7 @@ const generateCodeBase = async (options: BuildOptions) => {
   return;
 };
 
-const runCli = async () => {
+const main = async () => {
   //clear terminal
   console.clear();
 
@@ -128,8 +124,6 @@ const runCli = async () => {
     .parse(process.argv);
 
   const options = program.opts();
-
-  console.log("Options: ", options);
 
   if (options.name) {
     buildOptions.name = options.name;

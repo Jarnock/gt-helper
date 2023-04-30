@@ -104,7 +104,7 @@
       "~helpers/*": ["helpers/*"],
       "~functions/*": ["functions/*"],
       "~config/*": ["config/*"],
-      "~db/*": ["db/*"],
+      "~db/*": ["../db/*"],
       "~/*": ["*"]
     }
   }
