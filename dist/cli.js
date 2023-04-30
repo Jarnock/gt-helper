@@ -11,9 +11,6 @@ import inquirer from "inquirer";
 import isValidFilename from "valid-filename";
 const GT_HELPER = "gt-helper";
 const execa = promisify(exec);
-const main = async () => {
-    runCli();
-};
 const getCodebasePath = () => {
     const __dirname = path.join(fileURLToPath(import.meta.url), "..", "..");
     return path.join(__dirname, "codebase");
@@ -67,7 +64,7 @@ const generateCodeBase = async (options) => {
     await renameDotFiles();
     return;
 };
-const runCli = async () => {
+const main = async () => {
     //clear terminal
     console.clear();
     console.log(figlet.textSync("GT - Helper", {
@@ -88,7 +85,6 @@ const runCli = async () => {
         .option("--experimental", "Enable experimental features")
         .parse(process.argv);
     const options = program.opts();
-    console.log("Options: ", options);
     if (options.name) {
         buildOptions.name = options.name;
     }
