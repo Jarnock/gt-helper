@@ -48,7 +48,7 @@ If you do not want to use the CLI interface to set up your project, you can use 
 - Overt Gather.Town Extension lifecycle, for easy debugging and testing
 - Modular helper functions, easy to add your own
 
-## Player Utility Class
+### Player Utility Class
 
 The Player Utility Class is a class that extends the Gather.Town Player class. It adds a lot of utility functions to make it easier to work with players in extensions.
 
@@ -73,7 +73,7 @@ The Player Utility Class is a class that extends the Gather.Town Player class. I
   - `giveItem`: give item to player
   - `removeItem`: remove item from player
 
-## Object Utility Class
+### Object Utility Class
 
 The Object Utility Class is a class that extends the Gather.Town Object class. It adds a lot of utility functions to make it easier to work with objects in extensions.
 
@@ -93,6 +93,32 @@ The Object Utility Class is a class that extends the Gather.Town Object class. I
   - `update`: Update object in game
   - `toString`/`toJSON`: Object export for easy debugging
   - `moveTo`/`moveBy`: Easy object movement
+
+## Example Setup
+
+### Basic Usage with Prisma
+
+```console
+npx gt-helper@latest
+```
+
+```console
+What is the name of your project? my-project
+Would you like to enable experimental features? No
+Do you want to use a database? Yes
+What ORM do you want to use? Prisma
+```
+
+```console
+cd my-project
+npm run studio
+```
+
+In the Prisma Studio window, click on the 'spaces' table, then add new record, and fill in the URL field with your Gather Space URL.
+
+```console
+npm run start
+```
 
 ## Roadmap
 
