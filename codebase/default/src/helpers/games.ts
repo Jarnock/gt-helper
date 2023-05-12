@@ -57,8 +57,6 @@ export const connectToGames = (gameArray: GameArray) => {
     if (gameArray.post_connect_actions) {
       gameArray.post_connect_actions(game);
     }
-
-    subscribeToEvents(game);
   });
 };
 
