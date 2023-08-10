@@ -144,7 +144,7 @@ interface Type7_Object extends MapObject {
   highlighted: string;
   properties: {
     extensionData: {
-      entries: ModalEntries[];
+      entries: AllModalEntries[];
     };
   };
 }
@@ -180,14 +180,20 @@ interface Type9_Object extends MapObject {
  * @readonly
  * @enum {string}
  */
-enum ModalEntries_Type_ENUM {
-  HEADER = "header",
-  PARAGRAPH = "paragraph",
-  RADIO = "radio",
-  CHECKBOX = "checkbox",
-  TEXT = "text",
-  PASSWORD = "password",
-}
+const modalEntriesTypes = [
+  "header",
+  "paragraph",
+  "radio",
+  "checkbox",
+  "text",
+  "password",
+] as const;
+
+type ModalEntries = {
+  type: (typeof modalEntriesTypes)[number];
+  value: string;
+  key: string;
+};
 
 /**
  * Base interface for Header entries
@@ -195,11 +201,9 @@ enum ModalEntries_Type_ENUM {
  * @requires `value: string`
  * @requires `key: string`
  */
-type ModalEntries_Header = {
-  value: string;
-  key: string;
-  type: ModalEntries_Type_ENUM.HEADER;
-};
+interface ModalEntries_Header extends ModalEntries {
+  type: "header";
+}
 
 /**
  * Base interface for Paragraph entries
@@ -207,11 +211,9 @@ type ModalEntries_Header = {
  * @requires `value: string`
  * @requires `key: string`
  */
-type ModalEntries_Paragraph = {
-  value: string;
-  key: string;
-  type: ModalEntries_Type_ENUM.PARAGRAPH;
-};
+interface ModalEntries_Paragraph extends ModalEntries {
+  type: "paragraph";
+}
 
 /**
  * Base interface for Radio entries
@@ -220,15 +222,13 @@ type ModalEntries_Paragraph = {
  * @requires `key: string`
  * @requires `options: { label: string, key: string }[]`
  */
-type ModalEntries_Radio = {
-  value: string;
-  key: string;
-  type: ModalEntries_Type_ENUM.RADIO;
+interface ModalEntries_Radio extends ModalEntries {
+  type: "radio";
   options: {
     label: string;
     key: string;
   }[];
-};
+}
 
 /**
  * Base interface for Checkbox entries
@@ -237,15 +237,15 @@ type ModalEntries_Radio = {
  * @requires `key: string`
  * @requires `options: { label: string, key: string }[]`
  */
-type ModalEntries_Checkbox = {
+interface ModalEntries_Checkbox extends ModalEntries {
   value: string;
   key: string;
-  type: ModalEntries_Type_ENUM.CHECKBOX;
+  type: "checkbox";
   options: {
     label: string;
     key: string;
   }[];
-};
+}
 
 /**
  * Base interface for Text Input entries
@@ -253,11 +253,11 @@ type ModalEntries_Checkbox = {
  * @requires `value: string`
  * @requires `key: string`
  */
-type ModalEntries_Text = {
+interface ModalEntries_Text extends ModalEntries {
   value: string;
   key: string;
-  type: ModalEntries_Type_ENUM.TEXT;
-};
+  type: "text";
+}
 
 /**
  * Base interface for Password Input entries
@@ -265,17 +265,15 @@ type ModalEntries_Text = {
  * @requires `value: string`
  * @requires `key: string`
  */
-type ModalEntries_Password = {
-  value: string;
-  key: string;
-  type: ModalEntries_Type_ENUM.PASSWORD;
-};
+interface ModalEntries_Password extends ModalEntries {
+  type: "password";
+}
 
 ////////////////////////////////
 ////////// Type Joins //////////
 ////////////////////////////////
 
-type ModalEntries =
+type AllModalEntries =
   | ModalEntries_Header
   | ModalEntries_Paragraph
   | ModalEntries_Radio
@@ -304,6 +302,7 @@ type GT_Object =
  * @param {GT_Object} gt_object - The GT Object to be used
  * @param {Game} game - The game object to be used
  * @param {string} map - The map the object exists on
+ * @param {string} key - The key of the object within the map
  *
  * @note This class is not meant to be used directly, but rather through `GTObjectFactory`
  */
@@ -320,8 +319,11 @@ class GTObject {
       height: 0,
       normal: "",
     } as Type0_Object,
-    public game?: Game,
-    public map?: string
+    public info?: {
+      game?: Game;
+      map?: string;
+      key?: string;
+    }
   ) {
     switch (gt_object.type ?? InteractionEnum_ENUM.NONE) {
       case InteractionEnum_ENUM.NONE:
@@ -359,13 +361,7 @@ class GTObject {
         break;
     }
 
-    if (game) {
-      this.game = game;
-    }
-
-    if (map) {
-      this.map = map;
-    }
+    this.info = info ?? {};
   }
 
   //Accessors
@@ -427,10 +423,6 @@ class GTObject {
 
   get properties() {
     return this.gt_object.properties;
-  }
-
-  get key() {
-    return this.gt_object.key ?? "";
   }
 
   //Mutators
@@ -550,21 +542,13 @@ class GTObject {
    *
    */
   update(await: boolean = false) {
-    if (!this.gt_object.id) {
+    if (!this.info?.game || !this.info?.map || !this.info?.key) {
       return;
     }
 
-    if (!this.game) {
-      return;
-    }
-
-    if (!this.map) {
-      return;
-    }
-
-    return this.game.setObject(
-      this.map,
-      this.gt_object.id,
+    return this.info.game.updateObject(
+      this.info.map,
+      this.info.key,
       this.gt_object,
       await
     );
@@ -589,8 +573,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a GT_Object
    * @example const object = GTObjectFactory.create(gt_object);
    */
-  create: (object: GT_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create: (
+    object: GT_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -601,8 +588,26 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a MapObject
    * @example const object = GTObjectFactory.createFromMapObject(map_object);
    */
-  createFromMapObject: (object: MapObject, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  createFromMapObject: (
+    object: MapObject,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
+  },
+
+  /**
+   * @param object Type0_Object
+   * @param game Game
+   * @param map Map ID
+   * @returns GTObject
+   * @description Creates a GTObject from a Type0_Object
+   * @example const object = GTObjectFactory.create_type_0(type0_object);
+   */
+  create_type_0: (
+    object: Type0_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -613,8 +618,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type1_Object
    * @example const object = GTObjectFactory.create_type_1(type1_object);
    */
-  create_type_1: (object: Type1_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_1: (
+    object: Type1_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -625,8 +633,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type2_Object
    * @example const object = GTObjectFactory.create_type_2(type2_object);
    */
-  create_type_2: (object: Type2_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_2: (
+    object: Type2_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -637,8 +648,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type3_Object
    * @example const object = GTObjectFactory.create_type_3(type3_object);
    */
-  create_type_3: (object: Type3_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_3: (
+    object: Type3_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -649,8 +663,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type4_Object
    * @example const object = GTObjectFactory.create_type_4(type4_object);
    */
-  create_type_4: (object: Type4_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_4: (
+    object: Type4_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -661,8 +678,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type5_Object
    * @example const object = GTObjectFactory.create_type_5(type5_object);
    */
-  create_type_5: (object: Type5_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_5: (
+    object: Type5_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -673,8 +693,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type6_Object
    * @example const object = GTObjectFactory.create_type_6(type6_object);
    */
-  create_type_6: (object: Type6_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_6: (
+    object: Type6_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -685,8 +708,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type7_Object
    * @example const object = GTObjectFactory.create_type_7(type7_object);
    */
-  create_type_7: (object: Type7_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_7: (
+    object: Type7_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -697,8 +723,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type8_Object
    * @example const object = GTObjectFactory.create_type_8(type8_object);
    */
-  create_type_8: (object: Type8_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_8: (
+    object: Type8_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 
   /**
@@ -709,8 +738,11 @@ export const GTObjectFactory = {
    * @description Creates a GTObject from a Type9_Object
    * @example const object = GTObjectFactory.create_type_9(type9_object);
    */
-  create_type_9: (object: Type9_Object, game?: Game, map?: string) => {
-    return new GTObject(object, game, map);
+  create_type_9: (
+    object: Type9_Object,
+    info?: { game?: Game; map?: string; key?: string }
+  ) => {
+    return new GTObject(object, info);
   },
 };
 

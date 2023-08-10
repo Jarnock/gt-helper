@@ -1,4 +1,4 @@
-import { Game, Player } from "@gathertown/gather-game-client";
+import { DBOutfit, Game, Player } from "@gathertown/gather-game-client";
 import { cli_output } from "~helpers/errors";
 
 export const Outfit_Parts_Array = [
@@ -16,37 +16,7 @@ export const Outfit_Parts_Array = [
   "mobility",
 ] as const;
 
-type Outfit_Parts = (typeof Outfit_Parts_Array)[number];
-
-interface GT_Player extends Partial<Player> {
-  outfit_json?: {
-    [key in Outfit_Parts]?: Partial<GT_Outfit_Part>;
-  };
-
-  outfit?: {
-    [key in Outfit_Parts]: {
-      front?: string;
-      back?: string;
-    };
-  };
-}
-
-type GT_Outfit_Part = {
-  id: string;
-  color: string;
-  name: string;
-  type: string;
-  subType?: string;
-  style?: string;
-  isDefault: boolean;
-  previewUrl: string;
-  startDate: null;
-  endDate: null;
-  parts: {
-    layerId: string;
-    spritesheetId: string;
-  }[];
-};
+interface GT_Player extends Partial<Player> {}
 
 //GT Player class
 
@@ -57,127 +27,20 @@ class GTPlayer {
       x: 0,
       y: 0,
       direction: 0,
-      outfitString: "",
-      outfit_json: undefined,
-      outfit: undefined,
     } as GT_Player,
     public game?: Game
   ) {
     this.player = player as GT_Player;
-    this.player.outfit_json = JSON.parse(
-      player.outfitString || JSON.stringify({})
-    ) as GT_Player["outfit_json"];
-    this.player.outfit = this.parseOutfit(this.player.outfit_json);
     this.game = game as Game;
-  }
-
-  parseOutfit(outfit: GT_Player["outfit_json"]): GT_Player["outfit"] {
-    const parsedOutfit: GT_Player["outfit"] = {
-      skin: { front: "", back: "" },
-      hair: { front: "", back: "" },
-      glasses: { front: "", back: "" },
-      hat: { front: "", back: "" },
-      top: { front: "", back: "" },
-      bottom: { front: "", back: "" },
-      shoes: { front: "", back: "" },
-      other: { front: "", back: "" },
-      jacket: { front: "", back: "" },
-      facial_hair: { front: "", back: "" },
-      costume: { front: "", back: "" },
-      mobility: { front: "", back: "" },
-    };
-
-    if (!outfit) return parsedOutfit;
-
-    for (const [key, value] of Object.entries(outfit)) {
-      const part = key as Outfit_Parts;
-      if (!value || !value.parts || value.parts.length > 0) continue;
-      value.parts.forEach((sprite_part) => {
-        const { layerId, spritesheetId } = sprite_part;
-        if (!layerId || !spritesheetId) return;
-        if (!parsedOutfit?.[part]?.front) return;
-        if (!parsedOutfit?.[part]?.back) return;
-        if (layerId.includes("front")) {
-          parsedOutfit[part].front = spritesheetId;
-        } else if (layerId.includes("back")) {
-          parsedOutfit[part].back = spritesheetId;
-        }
-      });
-    }
-
-    return parsedOutfit;
-  }
-
-  async updateOutfitString(outfitString: string) {
-    this.player.outfitString = outfitString;
-
-    this.player.outfit_json = JSON.parse(
-      this.player.outfitString || JSON.stringify({})
-    ) as GT_Player["outfit_json"];
-
-    this.player.outfit = this.parseOutfit(this.player.outfit_json);
-  }
-
-  async updateOutfitJSON(outfit_json: GT_Player["outfit_json"]) {
-    this.player.outfit_json = outfit_json;
-
-    this.player.outfitString = JSON.stringify(this.player.outfit_json);
-
-    this.player.outfit = this.parseOutfit(this.player.outfit_json);
-  }
-
-  async updateOutfit(outfit: GT_Player["outfit"]) {
-    if (!outfit) return;
-    this.player.outfit = outfit;
-
-    const outfit_json: Partial<GT_Player["outfit_json"]> =
-      this.player.outfit_json || {};
-
-    for (const [key, value] of Object.entries(outfit)) {
-      const part = key as Outfit_Parts;
-      if (!value) continue;
-      const { front, back } = value;
-      if (!front || !back) continue;
-      if (!outfit_json[part]) {
-        outfit_json[part] = {
-          ...outfit_json[part],
-          parts: [
-            {
-              layerId: `${part} front`,
-              spritesheetId: front,
-            },
-            {
-              layerId: `${part} back`,
-              spritesheetId: back,
-            },
-          ],
-        };
-      }
-
-      if (outfit_json[part]) {
-        outfit_json[part] = {
-          parts: [
-            {
-              layerId: `${part} front`,
-              spritesheetId: front,
-            },
-            {
-              layerId: `${part} back`,
-              spritesheetId: back,
-            },
-          ],
-        };
-      }
-    }
   }
 
   getSpriteUrl() {
     if (!this.game) return;
     if (!this.game.engine?._connected) return;
 
-    if (!this.player.outfitString) return makeAvatarURL("");
+    if (!this.player.currentlyEquippedWearables) return "";
 
-    return makeAvatarURL(this.player.outfitString);
+    return makeAvatarURL(this.player.currentlyEquippedWearables);
   }
 
   ghost() {
@@ -255,55 +118,38 @@ interface Outfit_String_Parts {
   };
 }
 
-export const makeAvatarURL = (outfitString: string) => {
+export const makeAvatarURL = (
+  equippedWearables: DBOutfit,
+  imgType: "AVATAR" | "PROFILE" = "AVATAR"
+) => {
   let spriteUrl = "";
+  let spriteUrlStart = "https://dynamic-assets.gather.town/sprite/avatar-";
+  switch (imgType) {
+    case "AVATAR":
+      spriteUrlStart = "https://dynamic-assets.gather.town/sprite/avatar-";
+      break;
+    case "PROFILE":
+      spriteUrlStart =
+        "https://dynamic-assets.gather.town/sprite-profile/avatar-";
+      break;
+    default:
+      break;
+  }
 
-  if (outfitString) {
-    let spriteJSON: Outfit_String_Parts = JSON.parse(outfitString);
-
-    const spriteUrlStart = "https://dynamic-assets.gather.town/sprite/avatar-";
+  if (equippedWearables) {
     var urlParts = [];
-
-    if (spriteJSON["costume"] === null) {
-      //loop through sprite parts and add to urlParts front and back
+    if (equippedWearables["costume"] === null) {
+      //loop through sprite parts
       for (let part of Outfit_Parts_Array) {
-        if (!spriteJSON[part]?.parts) continue;
-        for (let sprite of spriteJSON[part].parts) {
-          if (!sprite?.layerId) continue;
-          switch (sprite.layerId.split(" ")[1]) {
-            case "back":
-              urlParts.unshift(sprite.spritesheetId);
-              break;
-            case "front":
-              urlParts.push(sprite.spritesheetId);
-              break;
-            default:
-              break;
-          }
+        if (equippedWearables[part]) {
+          urlParts.push(equippedWearables[part]);
         }
       }
       spriteUrl =
         spriteUrlStart + [...urlParts.filter(Boolean)].join(".") + ".png?d=.";
     } else {
       //costume
-      if (spriteJSON["costume"]?.parts) {
-        for (let sprite of spriteJSON["costume"].parts) {
-          if (!sprite.layerId) continue;
-          switch (sprite.layerId.split(" ")[1]) {
-            case "back":
-              urlParts.unshift(sprite.spritesheetId);
-              break;
-            case "front":
-              urlParts.push(sprite.spritesheetId);
-              break;
-            default:
-              break;
-          }
-        }
-      }
-
-      spriteUrl =
-        spriteUrlStart + [...urlParts.filter(Boolean)].join(".") + ".png?d=.";
+      spriteUrl = spriteUrlStart + equippedWearables["costume"] + ".png?d=.";
     }
   } else {
     spriteUrl = "";

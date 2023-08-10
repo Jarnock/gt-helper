@@ -5,6 +5,7 @@
   "main": "dist/app.js",
   "scripts": {
     "compile": "tsc",
+    "build": "npm run compile",
     "start": "npx ts-node -r tsconfig-paths/register src/app.ts",
     "update": "npm i @gathertown/gather-game-client@latest --save"
   },
@@ -12,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@gathertown/gather-game-client": "^40.0.0",
+    "@gathertown/gather-game-client": "^42.0.0",
     "@t3-oss/env-core": "^0.2.2",
     "isomorphic-ws": "^4.0.1",
     "zod": "^3.21.4",
